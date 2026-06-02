@@ -31,6 +31,9 @@ The application provides an interactive Pokedex experience where users can searc
 - Base Stats
 - Abilities
 
+<img width="825" height="870" alt="image" src="https://github.com/user-attachments/assets/59f2a831-a699-4433-b896-2eafd90e17c3" />
+
+
 ---
 
 ## Tech Stack
