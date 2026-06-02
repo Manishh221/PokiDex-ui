@@ -1,175 +1,132 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import "./Pokedex.css";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 const API_BASE = "http://localhost:8080/api/pokemon";
 
-const statColors = {
-  "hp":              "#E24B4A",
-  "attack":          "#D85A30",
-  "defense":         "#185FA5",
-  "special-attack":  "#533AB7",
-  "special-defense": "#0F6E56",
-  "speed":           "#BA7517",
-};
-
-const statLabels = {
-  "hp":              "HP",
-  "attack":          "Attack",
-  "defense":         "Defense",
-  "special-attack":  "Sp. Atk",
-  "special-defense": "Sp. Def",
-  "speed":           "Speed",
-};
-
-// ─── StatBar Component ────────────────────────────────────────────────────────
-
-function StatBar({ stat }) {
-  const [width, setWidth] = useState(0);
-
-  const pct   = Math.min(100, Math.round((stat.base_stat / 255) * 100));
-  const color = statColors[stat.stat.name] || "#888";
-  const label = statLabels[stat.stat.name] || stat.stat.name;
-
-  // Animate bar on mount
-  useEffect(() => {
-    const timer = setTimeout(() => setWidth(pct), 80);
-    return () => clearTimeout(timer);
-  }, [pct]);
-
-  return (
-    <div className="stat-row">
-      <span className="stat-name">{label}</span>
-      <span className="stat-val">{stat.base_stat}</span>
-      <div className="bar-track">
-        <div
-          className="bar-fill"
-          style={{ width: `${width}%`, background: color }}
-        />
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Pokedex Component ───────────────────────────────────────────────────
-
 export default function Pokedex() {
-  const [query,   setQuery]   = useState("");
-  const [pokemon, setPokemon] = useState(null);
+
+  const [query,   setQuery]   = useState("");   
+  const [pokemon, setPokemon] = useState(null); 
   const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState("");
+  const [error,   setError]   = useState("");   
 
-  // ── Search handler ──
+  
   const handleSearch = async () => {
-    const name = query.trim().toLowerCase();
 
-    if (!name) {
-      setError("Please Enter Any Pokemon Name!");
+    
+    if (!query.trim()) {
+      setError("Please enter a Pokemon name!");
       return;
     }
 
+   
     setError("");
     setPokemon(null);
     setLoading(true);
 
     try {
-      const response = await axios.get(`${API_BASE}/${name}`);
+      
+      const response = await axios.get(`${API_BASE}/${query.trim().toLowerCase()}`);
       setPokemon(response.data);
+
     } catch (err) {
+      // Handle errors
       if (err.response?.status === 404) {
-        setError(`"${name}" not found. Is the name correct?`);
+        setError(`"${query}" not found!`);
       } else {
-        setError("An error occurred. Please check your connection and try again.");
+        setError("Something went wrong. Please try again!");
       }
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
 
-  // ── Enter key support ──
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSearch();
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="pokedex">
 
-      {/* Header */}
+     
       <div className="header">
         <h1>Pokédex</h1>
-        <p>Search Any Pokemon By Their Name</p>
+        <p>Search any Pokemon by name</p>
       </div>
 
-      {/* Search Bar */}
+     
       <div className="search-bar">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. charizard, pikachu, bulbasaur..."
+          placeholder="e.g. pikachu, charizard..."
         />
-        <button onClick={handleSearch}>🔍 Search</button>
+        <button onClick={handleSearch}>Search</button>
       </div>
 
-      {/* Error Box */}
-      {error && <div className="error-box">{error}</div>}
-
-      {/* Loader */}
-      {loading && (
-        <div className="loader">
-          <span className="spin">⚙️</span> Loading...
-        </div>
+      {error && (
+        <div className="error-box">{error}</div>
       )}
 
-      {/* Pokemon Card */}
+     
+      {loading && (
+        <div className="loader">Loading...</div>
+      )}
+
+     
       {pokemon && (
         <div className="card">
 
-          {/* Top: Image + Info */}
+          
           <div className="card-top">
-            <img
-              className="pokemon-img"
-              src={pokemon.image}
-              alt={pokemon.name}
-            />
-            <div className="pokemon-info">
-              <div className="pokemon-id">
-                #{String(pokemon.id).padStart(3, "0")}
-              </div>
-              <div className="pokemon-name">{pokemon.name}</div>
+            <img src={pokemon.image} alt={pokemon.name} className="pokemon-img" />
 
-              {/* Type Badges */}
+            <div className="pokemon-info">
+              <p className="pokemon-id">#{String(pokemon.id).padStart(3, "0")}</p>
+              <h2 className="pokemon-name">{pokemon.name}</h2>
+
+             
               <div className="type-badges">
                 {pokemon.types.map((type) => (
                   <span key={type} className={`badge ${type}`}>{type}</span>
                 ))}
               </div>
 
-              {/* Meta Pills */}
+              
               <div className="meta-row">
-                <span className="meta-pill">Height: <span>{(pokemon.height / 10).toFixed(1)}m</span></span>
-                <span className="meta-pill">Weight: <span>{(pokemon.weight / 10).toFixed(1)}kg</span></span>
-                <span className="meta-pill">Base XP: <span>{pokemon.baseExperience}</span></span>
+                <span className="meta-pill">Height: <strong>{(pokemon.height / 10).toFixed(1)}m</strong></span>
+                <span className="meta-pill">Weight: <strong>{(pokemon.weight / 10).toFixed(1)}kg</strong></span>
+                <span className="meta-pill">Base XP: <strong>{pokemon.baseExperience}</strong></span>
               </div>
             </div>
           </div>
 
-          {/* Body: Stats + Abilities */}
+          
           <div className="card-body">
 
-            <div className="section-label">Base Stats</div>
+           
+            <p className="section-label">Base Stats</p>
             <div className="stats-grid">
               {pokemon.stats.map((s) => (
-                <StatBar key={s.stat.name} stat={s} />
+                <div key={s.stat.name} className="stat-row">
+                  <span className="stat-name">{s.stat.name}</span>
+                  <span className="stat-val">{s.base_stat}</span>
+                  <div className="bar-track">
+                    <div
+                      className="bar-fill"
+                      style={{ width: `${Math.round((s.base_stat / 255) * 100)}%` }}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
 
-            <div className="section-label">Abilities</div>
+           
+            <p className="section-label">Abilities</p>
             <div className="abilities-row">
               {pokemon.abilities.map((a) => (
                 <span key={a} className="badge ability">{a}</span>
